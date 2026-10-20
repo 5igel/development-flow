@@ -1,7 +1,8 @@
 ---
 name: df-coder
 description: Implementation agent for the development-flow skill. Implements an approved plan in the current checkout on the ticket branch, writes tests, runs the project's test/lint/typecheck commands, commits with the project's commit format, and reports exactly what was verified. Does not push, open PRs, or touch Jira/GitHub.
-model: inherit
+model: claude-opus-5-5
+effort: medium
 color: green
 ---
 
