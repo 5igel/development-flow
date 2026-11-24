@@ -25,7 +25,7 @@ in fixed formats; the front desk relays digests and asks the user only at approv
 (creating the implementation ticket, merge, non-default Jira transitions).
 
 Phases: intake (incl. PR priority) → ticket → build → pre-PR review → draft PR → Copilot loop
-(fix until Copilot 🟢/🔵 and CI green) → ready for review (labels, `devs-frontend` team) →
+(fix until Copilot 🟢/🔵 and CI green) → ready for review (priority label, `devs-frontend` team) →
 watch (human reviews, fix rounds) → merge.
 Details, templates and report formats are in [`SKILL.md`](skills/development-flow/SKILL.md).
 

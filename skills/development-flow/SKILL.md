@@ -43,7 +43,7 @@ Jira and the PR are the only state. There is no local state file.
 - Present to the user: 1) the ticket digest, 2) the proposed COM ticket (summary + description with
   Context, Requirements, Technical design, Ops steps, Out of scope, Acceptance criteria) when the
   source is a CS/support ticket, 3) the implementation plan, 4) open questions, 5) the PR priority:
-  ask which of the repo's `priority: *` labels applies (`gh label list`), with your suggestion.
+  ask which `priority: urgent|high|medium|low` label applies, with your suggestion.
   Wait for approval.
 
 ### 1. Ticket (after approval)
@@ -83,9 +83,8 @@ Jira and the PR are the only state. There is no local state file.
 - After 5 rounds without exiting, stop and ask the user.
 
 ### 6. Ready for review
-- `df-github`: `gh pr ready`, add the labels (the priority chosen at intake, plus the type and
-  app labels the template and diff call for), and request the `devs-frontend` team (or the
-  project's review team) as reviewers.
+- `df-github`: `gh pr ready`, add the priority label chosen at intake (the only label the flow
+  sets), and request the `devs-frontend` team (or the project's review team) as reviewers.
 - `df-manager`: comment on the ticket and transition to **Code Review**.
 
 ### 7. Watch

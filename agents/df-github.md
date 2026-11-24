@@ -23,8 +23,8 @@ Copilot review and CI on that head are in, and report the verdict: the `### <emo
 line of the review whose body starts with `<!-- ccr-overview-v2 -->`, plus its open issue count.
 
 ## Marking ready (only when the brief says so)
-`gh pr ready <PR>`, then `gh pr edit <PR> --add-label "<label>" ... --add-reviewer <org>/<team>`
-with the labels and team the brief names. Report `EVENT: READY` with the labels and reviewers set.
+`gh pr ready <PR>`, then `gh pr edit <PR> --add-label "priority: <level>" --add-reviewer <org>/<team>`
+with the priority and team the brief names. Report `EVENT: READY` with the label and reviewers set.
 
 ## Watching
 Foreground sleep is blocked. Run the poller in the background:
