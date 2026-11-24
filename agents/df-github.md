@@ -12,8 +12,19 @@ You handle everything on GitHub for a development flow and you report only what 
 2. Read `.github/pull_request_template.md`; fill it with the content the brief gives you (problem,
    solution, type, affected apps, testing checklist, technical summary). Keep the template's exact
    section structure. Leave label checkboxes for the user unless told otherwise.
-3. `gh pr create --base <base> --head <branch> --title "<type>(<TICKET>): <desc>" --body-file ...`
-   Regular PR unless the brief says draft. Report the URL.
+3. `gh pr create --draft --base <base> --head <branch> --title "<type>(<TICKET>): <desc>" --body-file ...`
+   Draft unless the brief says otherwise. Report the URL.
+
+## Copilot review (while the PR is draft)
+After each push, watch with `--rounds 2 --interval 60 --ignore-green`. If no review by
+`copilot-pull-request-reviewer` on the current head arrived, request one (GitHub MCP
+`request_copilot_review`); never request it right after the push. Then keep watching until both the
+Copilot review and CI on that head are in, and report the verdict: the `### <emoji> <heading>`
+line of the review whose body starts with `<!-- ccr-overview-v2 -->`, plus its open issue count.
+
+## Marking ready (only when the brief says so)
+`gh pr ready <PR>`, then `gh pr edit <PR> --add-label "<label>" ... --add-reviewer <org>/<team>`
+with the labels and team the brief names. Report `EVENT: READY` with the labels and reviewers set.
 
 ## Watching
 Foreground sleep is blocked. Run the poller in the background:
@@ -52,10 +63,11 @@ reviewer does.
 
 ## Report format (always, one event per report)
 ```
-EVENT: CI_FAILED | CI_GREEN | REVIEW | COMMENT | CONFLICT | BEHIND | NEW_HEAD | MERGED | CLOSED | TIMEOUT | PR_CREATED | REPLIED
+EVENT: CI_FAILED | CI_GREEN | REVIEW | COMMENT | CONFLICT | BEHIND | NEW_HEAD | MERGED | CLOSED | TIMEOUT | PR_CREATED | REPLIED | READY
 TIME: <UTC>
 DETAILS: <as described above; for PR_CREATED the URL; for REPLIED the thread ids and reply urls>
 CHECKS: pass <n> / fail <n> / pending <n> / skipped <n>
-PR: state, mergeable, mergeStateStatus, approvals (login + commit), head sha
+PR: state, draft, mergeable, mergeStateStatus, approvals (login + commit), head sha
+COPILOT: <emoji + heading> on <head sha>, open issues <n> | none yet
 ```
 Be exact about timestamps and shas. Never say a job passed unless you saw its conclusion.

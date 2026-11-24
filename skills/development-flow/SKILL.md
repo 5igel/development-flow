@@ -24,8 +24,9 @@ Jira and the PR are the only state. There is no local state file.
    tool result. "Tests pass" means the report says which tests ran and passed.
 6. **The user wins.** A user message that arrives mid-task is handled first. If it changes the
    plan, forward the change to the affected agent with `SendMessage` right away.
-7. **Approval gates.** Ask before: creating the COM ticket, pushing the first commit / opening the
-   PR, merging, and any Jira transition other than the defaults below. Do not ask for routine
+7. **Approval gates.** Ask before: creating the COM ticket, merging, and any Jira transition other
+   than the defaults below. The draft PR, the Copilot loop and marking the PR ready follow from the
+   approved plan without asking. Do not ask for routine
    reversible steps (commits on the feature branch, comments on the ticket, replies on PR threads
    that report a fix, resolving a thread whose fix is pushed).
 8. **Read the project first.** Project rules (commit format, typecheck flags, lint, docs that must
@@ -41,7 +42,9 @@ Jira and the PR are the only state. There is no local state file.
   needed, spawn an `Explore` agent.
 - Present to the user: 1) the ticket digest, 2) the proposed COM ticket (summary + description with
   Context, Requirements, Technical design, Ops steps, Out of scope, Acceptance criteria) when the
-  source is a CS/support ticket, 3) the implementation plan, 4) open questions. Wait for approval.
+  source is a CS/support ticket, 3) the implementation plan, 4) open questions, 5) the PR priority:
+  ask which of the repo's `priority: *` labels applies (`gh label list`), with your suggestion.
+  Wait for approval.
 
 ### 1. Ticket (after approval)
 - `df-manager`: create the COM ticket (rich description via the Atlassian MCP; acli for links,
@@ -63,13 +66,29 @@ Jira and the PR are the only state. There is no local state file.
 - `fix-now` and `nitpick` go straight back to `df-coder` without asking. `ask-user` goes to the
   user with the reviewer's one-line reasoning.
 
-### 4. PR
-- `df-github`: push the branch, read `.github/pull_request_template.md`, create the PR (regular,
-  not draft, unless the user says otherwise), with ticket key in the title using the project's
-  commit format. Report the URL.
-- `df-manager`: comment the PR link on the ticket, transition to **Code Review**.
+### 4. Draft PR
+- When the build and pre-PR review are done, `df-github`: push the branch, read
+  `.github/pull_request_template.md`, create a **draft** PR with the ticket key in the title using
+  the project's commit format. Report the URL.
+- `df-manager`: comment the draft PR link on the ticket. The ticket stays **In Progress**.
 
-### 5. Watch
+### 5. Copilot loop (while draft)
+- `df-github` waits ~2 minutes for Copilot's auto-review on the current head; if none arrives it
+  requests one (GitHub MCP `request_copilot_review`). It then watches until the Copilot review
+  and CI on that head are both in.
+- The verdict is the `### <emoji>` heading of Copilot's `<!-- ccr-overview-v2 -->` review:
+  - **🟢 or 🔵, CI green, no open threads** → exit the loop, go to 6.
+  - **🟡 / 🔴, open threads, or CI red** → triage and fix as in "Routing of events" below, push,
+    reply and resolve the fixed threads, then repeat this phase on the new head.
+- After 5 rounds without exiting, stop and ask the user.
+
+### 6. Ready for review
+- `df-github`: `gh pr ready`, add the labels (the priority chosen at intake, plus the type and
+  app labels the template and diff call for), and request the `devs-frontend` team (or the
+  project's review team) as reviewers.
+- `df-manager`: comment on the ticket and transition to **Code Review**.
+
+### 7. Watch
 - `df-github` runs `scripts/watch-pr.sh` in background rounds (see "Watching a PR") and reports on
   the first actionable event only: CI failure (with the failing step and a log excerpt, and an
   explicit verdict "infra flake" vs "real failure"), new review or comment (verbatim, with author,
@@ -88,7 +107,7 @@ Jira and the PR are the only state. There is no local state file.
 - After every pushed fix round: `df-manager` posts a short round comment on the ticket and updates
   the description if the design changed.
 
-### 6. Merge
+### 8. Merge
 - Only on the user's explicit word. `df-github` merges with the project's merge method.
 - `df-manager` posts the final comment (merged PR, follow-ups) and asks the user which status to
   set, since post-merge states differ per team.
@@ -128,12 +147,13 @@ VERDICT: <ready | fix-now items first | needs user decisions>
 
 GitHub agent (one event per report, first actionable only):
 ```
-EVENT: CI_FAILED | CI_GREEN | REVIEW | COMMENT | CONFLICT | BEHIND | MERGED | CLOSED | TIMEOUT
+EVENT: CI_FAILED | CI_GREEN | REVIEW | COMMENT | CONFLICT | BEHIND | MERGED | CLOSED | TIMEOUT | PR_CREATED | READY
 TIME: <UTC>
 DETAILS: <for CI_FAILED: job, step, 20-60 log lines, verdict infra-flake|real; for REVIEW/COMMENT:
           author, state, each comment verbatim with file:line and thread id; otherwise one line>
 CHECKS: pass <n> / fail <n> / pending <n> / skipped <n>
-PR: state, mergeable, mergeStateStatus, approvals
+PR: state, draft, mergeable, mergeStateStatus, approvals
+COPILOT: <emoji + heading> on <head sha>, open issues <n> | none yet
 ```
 
 Manager:
@@ -162,7 +182,8 @@ Use GitHub's UTC timestamps for `--since` (take "now" from `date -u`), never the
   `editJiraIssue` with `contentFormat: markdown`. `acli --description-file` rejects hand-built ADF.
 - Links, comments, transitions, assignment, search: `acli jira workitem ...` (see the acli-jira
   skill). Site and board come from the project.
-- Status defaults: **In Progress** when the build starts, **Code Review** when the PR opens.
+- Status defaults: **In Progress** when the build starts, **Code Review** when the PR is marked
+  ready for review.
   Anything else is asked.
 
 ## Sub-commands

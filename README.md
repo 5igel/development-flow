@@ -22,9 +22,11 @@ install.sh                                   symlinks everything into ~/.claude
 The main session is a front desk. It reads the ticket, proposes a plan, and after approval hands
 every long job to a background agent via the `Agent` tool (`subagent_type: df-*`). Agents report
 in fixed formats; the front desk relays digests and asks the user only at approval gates
-(creating the implementation ticket, first push / PR, merge, non-default Jira transitions).
+(creating the implementation ticket, merge, non-default Jira transitions).
 
-Phases: intake → ticket → build → pre-PR review → PR → watch (CI, reviews, fix rounds) → merge.
+Phases: intake (incl. PR priority) → ticket → build → pre-PR review → draft PR → Copilot loop
+(fix until Copilot 🟢/🔵 and CI green) → ready for review (labels, `devs-frontend` team) →
+watch (human reviews, fix rounds) → merge.
 Details, templates and report formats are in [`SKILL.md`](skills/development-flow/SKILL.md).
 
 ## Install
